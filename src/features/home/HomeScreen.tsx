@@ -50,12 +50,30 @@ export default function HomeScreen({ onMovieClick, onPlayClick, onBrowse, onSear
     return () => clearInterval(t);
   }, []);
 
+  // Normalize title for dedup comparison
+  const normalizeTitle = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  // Remove TMDB items that already exist in Emby by title match
+  const dedup = (tmdbList: Movie[], embyTitles: Set<string>): Movie[] =>
+    tmdbList.filter(m => !embyTitles.has(normalizeTitle(m.title)));
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
 
-      // Load TMDB genres first
+      // ── Step 1: Load Emby FIRST (user's own library is priority) ──
+      const embyResult = await loadEmby();
+      if (cancelled) return;
+      setEmbyMovies(embyResult.movies);
+      setEmbySeries(embyResult.series);
+
+      // Build a set of Emby titles for dedup
+      const embyTitles = new Set<string>();
+      embyResult.movies.forEach(m => embyTitles.add(normalizeTitle(m.title)));
+      embyResult.series.forEach(m => embyTitles.add(normalizeTitle(m.title)));
+
+      // ── Step 2: Load TMDB genres + content in parallel ──
       const [movieGenres, tvGenres] = await Promise.all([
         tmdbGetGenres('movie'),
         tmdbGetGenres('tv'),
@@ -67,34 +85,34 @@ export default function HomeScreen({ onMovieClick, onPlayClick, onBrowse, onSear
       setGenreMap(gMap);
       setGenres(movieGenres);
 
-      // Load everything in parallel
       const [
-        trending, popular, npData, trData,
-        embyResult, tpbResult,
+        trending, popular, npData, trData, tpbResult,
       ] = await Promise.all([
         tmdbTrending('all', 'week'),
         tmdbPopular('movie', 1).then(d => d.results),
         tmdbNowPlaying(1),
         tmdbTopRated('movie', 1),
-        loadEmby(),
         getTPBTop('movies').catch(() => [] as TorrentResult[]),
       ]);
 
       if (cancelled) return;
-      setTrendingMovies(trending.map(i => tmdbItemToMovie(i, gMap)));
-      setPopularMovies(popular.map(i => tmdbItemToMovie(i, gMap)));
-      setNowPlaying(npData.map(i => tmdbItemToMovie(i, gMap)));
-      setTopRated(trData.map(i => tmdbItemToMovie(i, gMap)));
-      setEmbyMovies(embyResult.movies);
-      setEmbySeries(embyResult.series);
+
+      // Convert TMDB items and dedup against Emby library
+      setTrendingMovies(dedup(trending.map(i => tmdbItemToMovie(i, gMap)), embyTitles));
+      setPopularMovies(dedup(popular.map(i => tmdbItemToMovie(i, gMap)), embyTitles));
+      setNowPlaying(dedup(npData.map(i => tmdbItemToMovie(i, gMap)), embyTitles));
+      setTopRated(dedup(trData.map(i => tmdbItemToMovie(i, gMap)), embyTitles));
       setTpbTorrents(tpbResult);
 
-      // Load 3 genre rows
+      // Load 3 genre rows (deduped)
       const genrePicks = movieGenres.filter(g => [28, 35, 27, 878, 10749, 16].includes(g.id)).slice(0, 3);
       const genreResults = await Promise.all(
         genrePicks.map(async g => {
           const data = await tmdbDiscover('movie', g.id, 1);
-          return { genre: g, movies: data.results.slice(0, 15).map(i => tmdbItemToMovie(i, gMap)) };
+          return {
+            genre: g,
+            movies: dedup(data.results.slice(0, 15).map(i => tmdbItemToMovie(i, gMap)), embyTitles),
+          };
         })
       );
       if (!cancelled) setGenreRows(genreResults);
@@ -105,18 +123,18 @@ export default function HomeScreen({ onMovieClick, onPlayClick, onBrowse, onSear
     async function loadEmby() {
       const servers = getEmbyServers(user?.email);
       const server = servers[0];
-      if (!server) return { movies: PLACEHOLDER_MOVIES, series: [] as Movie[] };
+      if (!server) return { movies: [] as Movie[], series: [] as Movie[] };
       try {
         const [movieItems, seriesItems] = await Promise.all([
           embyFetchLibrary(server, 'Movie', 50),
           embyFetchLibrary(server, 'Series', 30),
         ]);
         return {
-          movies: movieItems.length > 0 ? movieItems.map(i => embyItemToMovie(i, server)) : PLACEHOLDER_MOVIES,
+          movies: movieItems.map(i => embyItemToMovie(i, server)),
           series: seriesItems.map(i => embyItemToMovie(i, server)),
         };
       } catch {
-        return { movies: PLACEHOLDER_MOVIES, series: [] as Movie[] };
+        return { movies: [] as Movie[], series: [] as Movie[] };
       }
     }
 
@@ -131,7 +149,7 @@ export default function HomeScreen({ onMovieClick, onPlayClick, onBrowse, onSear
     return `${h12.toString().padStart(2,'0')}:${m} ${ampm}`;
   };
 
-  const featured = trendingMovies[0] || embyMovies[0];
+  const featured = embyMovies[0] || trendingMovies[0];
 
   const handleSeeAll = (title: string, category: BrowseConfig['category'], type: 'movie' | 'tv' | 'all' = 'movie', genreId?: number) => {
     if (onBrowse) {
@@ -248,7 +266,31 @@ export default function HomeScreen({ onMovieClick, onPlayClick, onBrowse, onSear
           </div>
         )}
 
-        {/* Trending */}
+        {/* My Library — Emby Movies (loads first, always on top) */}
+        {(activeCategory === 'all' || activeCategory === 'mylib') && embyMovies.length > 0 && (
+          <div className="home-section">
+            <SectionHeader title="My Library" onSeeAll={() => {}} />
+            <div className="home-scroll-row">
+              {embyMovies.slice(0, 15).map(m => (
+                <MovieCard key={m.id} movie={m} onClick={onMovieClick} size="md" />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* My Library — Series */}
+        {(activeCategory === 'all' || activeCategory === 'mylib' || activeCategory === 'tv') && embySeries.length > 0 && (
+          <div className="home-section">
+            <SectionHeader title="My TV Series" onSeeAll={() => {}} />
+            <div className="home-scroll-row">
+              {embySeries.slice(0, 10).map(m => (
+                <MovieCard key={m.id} movie={m} onClick={onMovieClick} size="lg" />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Trending (TMDB — deduped against Emby) */}
         {(activeCategory === 'all' || activeCategory === 'movies' || activeCategory === 'tv') && trendingMovies.length > 0 && (
           <div className="home-section">
             <SectionHeader title="Trending This Week" onSeeAll={() => handleSeeAll('Trending This Week', 'trending', 'all')} />
@@ -315,30 +357,6 @@ export default function HomeScreen({ onMovieClick, onPlayClick, onBrowse, onSear
             </div>
           )
         ))}
-
-        {/* My Library — Emby Movies */}
-        {(activeCategory === 'all' || activeCategory === 'mylib') && embyMovies.length > 0 && (
-          <div className="home-section">
-            <SectionHeader title="My Library" onSeeAll={() => {}} />
-            <div className="home-scroll-row">
-              {embyMovies.slice(0, 12).map(m => (
-                <MovieCard key={m.id} movie={m} onClick={onMovieClick} size="md" />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* My Library — Series */}
-        {(activeCategory === 'all' || activeCategory === 'mylib' || activeCategory === 'tv') && embySeries.length > 0 && (
-          <div className="home-section">
-            <SectionHeader title="TV Series" onSeeAll={() => {}} />
-            <div className="home-scroll-row">
-              {embySeries.slice(0, 10).map(m => (
-                <MovieCard key={m.id} movie={m} onClick={onMovieClick} size="lg" />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Trending Torrents */}
         {(activeCategory === 'all') && tpbTorrents.length > 0 && (
