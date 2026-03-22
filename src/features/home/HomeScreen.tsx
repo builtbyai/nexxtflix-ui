@@ -149,7 +149,15 @@ export default function HomeScreen({ onMovieClick, onPlayClick, onBrowse, onSear
     return `${h12.toString().padStart(2,'0')}:${m} ${ampm}`;
   };
 
-  const featured = embyMovies[0] || trendingMovies[0];
+  // Show last played movie in hero, fallback to Emby/TMDB
+  const [lastPlayed, setLastPlayed] = useState<Movie | null>(null);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nexxtflix-last-played');
+      if (saved) setLastPlayed(JSON.parse(saved));
+    } catch {}
+  }, []);
+  const featured = lastPlayed || embyMovies[0] || trendingMovies[0];
 
   const handleSeeAll = (title: string, category: BrowseConfig['category'], type: 'movie' | 'tv' | 'all' = 'movie', genreId?: number) => {
     if (onBrowse) {

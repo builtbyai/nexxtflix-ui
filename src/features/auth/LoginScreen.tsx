@@ -64,6 +64,23 @@ export default function LoginScreen({ onSwitchToRegister }: Props) {
           <button type="submit" className="login-btn" disabled={loading || !email || !password}>
             {loading ? <div className="login-spinner" /> : 'Sign In'}
           </button>
+
+          <button type="button" className="login-forgot" onClick={() => {
+            const resetEmail = email || prompt('Enter your email address:');
+            if (resetEmail) {
+              fetch(`https://dashboard-signaling.jalen1wa.workers.dev/api/nexxtflix/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: resetEmail }),
+              }).then(() => {
+                alert('If an account exists with that email, the admin has been notified. You will receive a password reset soon.');
+              }).catch(() => {
+                alert('Request sent. The admin will be in touch.');
+              });
+            }
+          }}>
+            Forgot password?
+          </button>
         </form>
 
         <p className="login-switch">

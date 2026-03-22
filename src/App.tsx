@@ -16,6 +16,19 @@ import BottomNav from './components/BottomNav';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Movie, NavTab, Screen, BrowseConfig } from './types';
 
+function applyStoredTheme() {
+  try {
+    const saved = localStorage.getItem('nexxtflix-theme');
+    if (saved) {
+      const t = JSON.parse(saved);
+      const root = document.documentElement;
+      if (t.accent) root.style.setProperty('--accent', t.accent);
+      if (t.bg) root.style.setProperty('--bg-main', t.bg);
+    }
+  } catch {}
+}
+applyStoredTheme();
+
 function AppContent() {
   const { user, loading } = useAuth();
   const [screen, setScreen] = useState<Screen>('home');
@@ -103,7 +116,11 @@ function AppContent() {
         {screen === 'home' && (
           <HomeScreen
             onMovieClick={(m) => navigate('detail', m)}
-            onPlayClick={(m) => { setSelectedMovie(m); navigate('player', m); }}
+            onPlayClick={(m) => {
+              setSelectedMovie(m);
+              try { localStorage.setItem('nexxtflix-last-played', JSON.stringify({ id: m.id, title: m.title, genre: m.genre, year: m.year, rating: m.rating, duration: m.duration, description: m.description?.substring(0, 200), gradient: m.gradient, accentColor: m.accentColor, poster: m.poster, background: m.background, type: m.type, isSeries: m.isSeries, progress: 35 })); } catch {}
+              navigate('player', m);
+            }}
             onBrowse={(config) => { setBrowseConfig(config); navigate('browse', undefined, config); }}
             onSearch={() => navigate('search')}
           />

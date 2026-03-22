@@ -6,8 +6,59 @@ import { useAuth } from '../../context/AuthContext';
 
 const SERVER_COLORS = ['#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#ef4444'];
 
+const ACCENT_COLORS = [
+  { name: 'Purple', value: '#8b5cf6' },
+  { name: 'Pink', value: '#ec4899' },
+  { name: 'Blue', value: '#3b82f6' },
+  { name: 'Cyan', value: '#06b6d4' },
+  { name: 'Green', value: '#10b981' },
+  { name: 'Yellow', value: '#f59e0b' },
+  { name: 'Red', value: '#ef4444' },
+  { name: 'Orange', value: '#f97316' },
+  { name: 'Indigo', value: '#6366f1' },
+  { name: 'Rose', value: '#f43f5e' },
+  { name: 'Teal', value: '#14b8a6' },
+  { name: 'Lime', value: '#84cc16' },
+];
+
+const BG_PRESETS = [
+  { name: 'Deep Space', value: '#0d0d1a' },
+  { name: 'Midnight', value: '#0f172a' },
+  { name: 'Charcoal', value: '#1a1a2e' },
+  { name: 'Dark Blue', value: '#0c1222' },
+  { name: 'Pitch Black', value: '#000000' },
+  { name: 'Dark Gray', value: '#111827' },
+];
+
+interface UserTheme {
+  accent: string;
+  bg: string;
+  cardBg: string;
+  customAccent?: string;
+}
+
+function loadUserTheme(): UserTheme {
+  try {
+    const saved = localStorage.getItem('nexxtflix-theme');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return { accent: '#8b5cf6', bg: '#0d0d1a', cardBg: 'rgba(255,255,255,0.04)' };
+}
+
+function saveUserTheme(theme: UserTheme) {
+  localStorage.setItem('nexxtflix-theme', JSON.stringify(theme));
+  applyTheme(theme);
+}
+
+function applyTheme(theme: UserTheme) {
+  const root = document.documentElement;
+  root.style.setProperty('--accent', theme.accent);
+  root.style.setProperty('--bg-main', theme.bg);
+  if (theme.cardBg) root.style.setProperty('--bg-card', theme.cardBg);
+}
+
 export default function AccountScreen() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [rdUser, setRdUser] = useState<any>(null);
   const [notifications, setNotifications] = useState(true);
   const [servers, setServers] = useState<EmbyServer[]>(getEmbyServers(user?.email));
@@ -17,6 +68,13 @@ export default function AccountScreen() {
   const [serverUsers, setServerUsers] = useState<{ Id: string; Name: string }[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [savingServer, setSavingServer] = useState(false);
+  const [theme, setTheme] = useState<UserTheme>(loadUserTheme());
+  const [showTheme, setShowTheme] = useState(false);
+  const [customHex, setCustomHex] = useState(theme.accent);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, []);
 
   useEffect(() => {
     fetchRDUser().then(data => {
@@ -74,8 +132,21 @@ export default function AccountScreen() {
     setServers(updated);
   };
 
+  const handleAccentChange = (color: string) => {
+    const newTheme = { ...theme, accent: color };
+    setTheme(newTheme);
+    setCustomHex(color);
+    saveUserTheme(newTheme);
+  };
+
+  const handleBgChange = (color: string) => {
+    const newTheme = { ...theme, bg: color };
+    setTheme(newTheme);
+    saveUserTheme(newTheme);
+  };
+
   const MENU_ITEMS = [
-    { icon: 'settings', label: 'Playback Settings' },
+    { icon: 'palette', label: 'Theme & Colors', action: () => setShowTheme(t => !t) },
     { icon: 'bell', label: 'Notifications', toggle: true },
     { icon: 'download', label: 'Download Quality' },
     { icon: 'monitor', label: 'Display' },
@@ -87,16 +158,16 @@ export default function AccountScreen() {
   return (
     <div className="account-screen">
       <div className="account-profile">
-        <div className="account-avatar-ring">
+        <div className="account-avatar-ring" style={{ background: `linear-gradient(135deg, ${theme.accent}, #ec4899)` }}>
           <div className="account-avatar">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={theme.accent} strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
         </div>
-        <h2 className="account-name">{rdUser?.username || 'User'}</h2>
-        <p className="account-email">{rdUser?.email || 'Not connected'}</p>
+        <h2 className="account-name">{user?.name || rdUser?.username || 'User'}</h2>
+        <p className="account-email">{user?.email || rdUser?.email || 'Not connected'}</p>
         <span className="account-plan-badge">{rdUser ? 'Real-Debrid Premium' : 'Free'}</span>
       </div>
 
@@ -128,7 +199,6 @@ export default function AccountScreen() {
           </button>
         </div>
 
-        {/* Server List */}
         <div className="server-list">
           {servers.map(s => (
             <div key={s.id} className="server-item">
@@ -149,103 +219,55 @@ export default function AccountScreen() {
           ))}
         </div>
 
-        {/* Add Server Form */}
         {showAddForm && (
           <div className="add-server-form">
             <div className="form-field">
               <label className="form-label">Server Name</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="My Emby Server"
-                value={newServer.name}
-                onChange={e => setNewServer(p => ({ ...p, name: e.target.value }))}
-              />
+              <input type="text" className="form-input" placeholder="My Emby Server"
+                value={newServer.name} onChange={e => setNewServer(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div className="form-field">
               <label className="form-label">Server URL</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="https://emby.example.com"
-                value={newServer.url}
-                onChange={e => setNewServer(p => ({ ...p, url: e.target.value }))}
-              />
+              <input type="text" className="form-input" placeholder="https://emby.example.com"
+                value={newServer.url} onChange={e => setNewServer(p => ({ ...p, url: e.target.value }))} />
             </div>
             <div className="form-field">
               <label className="form-label">API Key</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Enter API key"
-                value={newServer.apiKey}
-                onChange={e => setNewServer(p => ({ ...p, apiKey: e.target.value }))}
-              />
+              <input type="text" className="form-input" placeholder="Enter API key"
+                value={newServer.apiKey} onChange={e => setNewServer(p => ({ ...p, apiKey: e.target.value }))} />
             </div>
-
-            {/* Direct/Local Toggle */}
             <div className="form-field form-field--row">
               <div className="form-field-label-group">
                 <label className="form-label">Direct / Local Connection</label>
-                <span className="form-hint">Enable for LAN servers — bypasses cloud proxy</span>
+                <span className="form-hint">Enable for LAN servers</span>
               </div>
-              <button
-                className={`smart-toggle ${newServer.direct ? 'smart-toggle--on' : ''}`}
-                onClick={() => setNewServer(p => ({ ...p, direct: !p.direct }))}
-              >
+              <button className={`smart-toggle ${newServer.direct ? 'smart-toggle--on' : ''}`}
+                onClick={() => setNewServer(p => ({ ...p, direct: !p.direct }))}>
                 <div className="smart-toggle-thumb" />
               </button>
             </div>
-
-            {/* User Picker */}
             {serverUsers.length > 0 && (
               <div className="form-field">
                 <label className="form-label">Select User</label>
-                <select
-                  className="form-select"
-                  value={selectedUserId}
-                  onChange={e => setSelectedUserId(e.target.value)}
-                >
-                  {serverUsers.map(u => (
-                    <option key={u.Id} value={u.Id}>{u.Name}</option>
-                  ))}
+                <select className="form-select" value={selectedUserId}
+                  onChange={e => setSelectedUserId(e.target.value)}>
+                  {serverUsers.map(u => <option key={u.Id} value={u.Id}>{u.Name}</option>)}
                 </select>
               </div>
             )}
-
-            {/* Test Status */}
             {testStatus === 'success' && (
-              <div className="test-result test-result--success">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Connection successful{serverUsers.length > 0 ? ` \u2022 ${serverUsers.length} user(s) found` : ''}
-              </div>
+              <div className="test-result test-result--success">Connection successful{serverUsers.length > 0 ? ` \u2022 ${serverUsers.length} user(s)` : ''}</div>
             )}
             {testStatus === 'fail' && (
-              <div className="test-result test-result--fail">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-                Connection failed. Check URL and API key.
-              </div>
+              <div className="test-result test-result--fail">Connection failed. Check URL and API key.</div>
             )}
-
             <div className="form-actions">
-              <button
-                className="form-btn form-btn--test"
-                onClick={handleTestConnection}
-                disabled={testStatus === 'testing' || !newServer.url || !newServer.apiKey}
-              >
-                {testStatus === 'testing' ? (
-                  <div className="form-spinner" />
-                ) : 'Test Connection'}
+              <button className="form-btn form-btn--test" onClick={handleTestConnection}
+                disabled={testStatus === 'testing' || !newServer.url || !newServer.apiKey}>
+                {testStatus === 'testing' ? <div className="form-spinner" /> : 'Test Connection'}
               </button>
-              <button
-                className="form-btn form-btn--save"
-                onClick={handleSaveServer}
-                disabled={!newServer.name || !newServer.url || !newServer.apiKey || savingServer}
-              >
+              <button className="form-btn form-btn--save" onClick={handleSaveServer}
+                disabled={!newServer.name || !newServer.url || !newServer.apiKey || savingServer}>
                 Save Server
               </button>
             </div>
@@ -270,11 +292,11 @@ export default function AccountScreen() {
 
       <div className="account-menu">
         {MENU_ITEMS.map((item, i) => (
-          <div key={i} className="account-menu-item">
+          <div key={i} className="account-menu-item" onClick={item.action}>
             <div className="menu-item-left">
               <div className="menu-item-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-                  {item.icon === 'settings' && <><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 18v-2m8-8h-2M4 12H2"/></>}
+                  {item.icon === 'palette' && <><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.04-.23-.29-.38-.63-.38-1.04 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-9.5-10-9.5z"/></>}
                   {item.icon === 'bell' && <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></>}
                   {item.icon === 'download' && <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>}
                   {item.icon === 'monitor' && <><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></>}
@@ -298,10 +320,64 @@ export default function AccountScreen() {
         ))}
       </div>
 
-      <button className="account-signout">Sign Out</button>
+      {/* Theme Configuration Panel */}
+      {showTheme && (
+        <div className="account-theme-panel">
+          <h3 className="account-section-title" style={{ padding: '0 16px', marginBottom: 12 }}>Accent Color</h3>
+          <div className="theme-color-grid">
+            {ACCENT_COLORS.map(c => (
+              <button
+                key={c.value}
+                className={`theme-color-swatch ${theme.accent === c.value ? 'theme-color-swatch--active' : ''}`}
+                style={{ background: c.value }}
+                onClick={() => handleAccentChange(c.value)}
+                title={c.name}
+              />
+            ))}
+          </div>
+          <div className="theme-custom-hex">
+            <label className="form-label">Custom Hex</label>
+            <div className="theme-hex-row">
+              <input
+                type="color"
+                value={customHex}
+                onChange={e => { setCustomHex(e.target.value); handleAccentChange(e.target.value); }}
+                className="theme-color-input"
+              />
+              <input
+                type="text"
+                value={customHex}
+                onChange={e => {
+                  setCustomHex(e.target.value);
+                  if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) handleAccentChange(e.target.value);
+                }}
+                className="form-input"
+                placeholder="#8b5cf6"
+                style={{ flex: 1 }}
+              />
+            </div>
+          </div>
+
+          <h3 className="account-section-title" style={{ padding: '0 16px', marginTop: 16, marginBottom: 12 }}>Background</h3>
+          <div className="theme-bg-grid">
+            {BG_PRESETS.map(bg => (
+              <button
+                key={bg.value}
+                className={`theme-bg-swatch ${theme.bg === bg.value ? 'theme-bg-swatch--active' : ''}`}
+                style={{ background: bg.value }}
+                onClick={() => handleBgChange(bg.value)}
+              >
+                <span className="theme-bg-label">{bg.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button className="account-signout" onClick={logout}>Sign Out</button>
 
       <div className="account-footer">
-        <span>NexxtFlix v2.0 &bull; Emby + Real-Debrid</span>
+        <span>NexxtFlix v2.0 &bull; Emby + Real-Debrid + TMDB</span>
       </div>
     </div>
   );
