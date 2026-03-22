@@ -1,0 +1,173 @@
+
+.hero-player {
+  margin: 8px 12px 16px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+}
+
+.hero-player__screen {
+  height: 240px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-player__stars { position: absolute; inset: 0; }
+.hero-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s infinite;
+  opacity: 0.6;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.5); }
+}
+
+.hero-player__planet {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1a3a6b, #0a0f2e, #000);
+  border: 1px solid rgba(99,102,241,0.3);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  box-shadow: 0 0 40px rgba(99,102,241,0.2), inset -10px -10px 30px rgba(0,0,0,0.8);
+  z-index: 1;
+}
+
+.hero-player__glow {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  opacity: 0.08;
+  filter: blur(40px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  z-index: 0;
+}
+
+.hero-player__title {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  z-index: 5;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.hero-player__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.hero-play-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hero-play-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.05); }
+.hero-play-btn:active { transform: scale(0.95); }
+
+.skip-intro-btn {
+  position: absolute;
+  right: 16px;
+  bottom: 60px;
+  background: rgba(30,30,50,0.85);
+  border: 1px solid rgba(139,92,246,0.5);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  z-index: 6;
+}
+.skip-intro-btn:hover { background: rgba(139,92,246,0.3); }
+
+.hero-player__controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  z-index: 5;
+}
+
+.hero-progress {
+  position: relative;
+  height: 3px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.hero-progress__fill {
+  position: absolute;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s linear;
+}
+
+.hero-progress__thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: left 0.3s linear;
+}
+
+.hero-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-time-left, .hero-time-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-mini-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.hero-time-text {
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}

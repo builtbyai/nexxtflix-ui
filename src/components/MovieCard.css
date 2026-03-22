@@ -1,0 +1,139 @@
+
+.movie-card {
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.25s, box-shadow 0.25s;
+  position: relative;
+}
+
+.movie-card:active { transform: scale(0.95); }
+.movie-card:hover { transform: scale(1.03); box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3); }
+
+.movie-card--sm { width: 100px; }
+.movie-card--sm .movie-card__poster { height: 140px; }
+
+.movie-card--md { width: 130px; }
+.movie-card--md .movie-card__poster { height: 180px; }
+
+.movie-card--lg { width: 160px; }
+.movie-card--lg .movie-card__poster { height: 220px; }
+
+.movie-card__poster {
+  width: 100%;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.movie-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+  z-index: 1;
+}
+
+.movie-card__title-overlay {
+  position: absolute;
+  bottom: 8px;
+  left: 6px;
+  right: 6px;
+  z-index: 3;
+}
+
+.movie-card__title-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.movie-card__badge {
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  z-index: 3;
+  background: rgba(139, 92, 246, 0.9);
+  color: white;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.movie-card__rating {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0,0,0,0.6);
+  padding: 2px 5px;
+  border-radius: 10px;
+}
+
+.movie-card__rating span {
+  font-size: 9px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.movie-card__shimmer {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  transform: rotate(15deg);
+  z-index: 2;
+}
+
+.movie-card__orb {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  opacity: 0.15;
+  filter: blur(20px);
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.movie-card__figure {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 70px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 20px 20px 0 0;
+  z-index: 1;
+}
+
+.movie-card__progress-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.movie-card__progress-fill {
+  height: 100%;
+  border-radius: 0 0 12px 12px;
+  transition: width 0.3s;
+}
