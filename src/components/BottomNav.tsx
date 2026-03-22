@@ -1,4 +1,3 @@
-
 import React from 'react';
 import './BottomNav.css';
 import { NavTab } from '../types';
@@ -13,6 +12,7 @@ const tabs: { id: NavTab; label: string; icon: string }[] = [
   { id: 'search', label: 'Search', icon: 'search' },
   { id: 'downloads', label: 'Downloads', icon: 'download' },
   { id: 'account', label: 'Account', icon: 'user' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
 ];
 
 function getIcon(name: string, active: boolean) {
@@ -45,6 +45,15 @@ function getIcon(name: string, active: boolean) {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
+        </svg>
+      );
+    case 'dashboard':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? color : 'none'} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
         </svg>
       );
     default: return null;

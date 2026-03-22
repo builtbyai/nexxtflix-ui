@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import './App.css';
 import HomeScreen from './features/home/HomeScreen';
@@ -7,10 +6,11 @@ import DetailScreen from './features/detail/DetailScreen';
 import SearchScreen from './features/search/SearchScreen';
 import DownloadsScreen from './features/downloads/DownloadsScreen';
 import AccountScreen from './features/account/AccountScreen';
+import DashboardScreen from './features/dashboard/DashboardScreen';
 import BottomNav from './components/BottomNav';
 import { Movie, NavTab } from './types';
 
-export type Screen = 'home' | 'player' | 'detail' | 'search' | 'downloads' | 'account';
+export type Screen = 'home' | 'player' | 'detail' | 'search' | 'downloads' | 'account' | 'dashboard';
 
 function App() {
   const [screen, setScreen] = useState<Screen>('home');
@@ -33,6 +33,7 @@ function App() {
     if (tab === 'search') setScreen('search');
     if (tab === 'downloads') setScreen('downloads');
     if (tab === 'account') setScreen('account');
+    if (tab === 'dashboard') setScreen('dashboard');
   };
 
   return (
@@ -71,6 +72,9 @@ function App() {
         )}
         {screen === 'account' && (
           <AccountScreen />
+        )}
+        {screen === 'dashboard' && (
+          <DashboardScreen onBack={() => navigate('home')} />
         )}
       </div>
       <BottomNav active={activeNav} onChange={handleNavChange} />
