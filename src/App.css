@@ -3,8 +3,10 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #0d0d1a;
-  max-width: 430px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   position: relative;
   overflow: hidden;
@@ -15,4 +17,13 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-bottom: 70px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Desktop: constrain content width for readability, center it */
+@media (min-width: 1024px) {
+  .screen-container {
+    padding-bottom: 0;
+  }
 }

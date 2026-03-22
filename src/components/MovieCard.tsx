@@ -13,11 +13,20 @@ interface Props {
 export default function MovieCard({ movie, onClick, size = 'md', showProgress = false }: Props) {
   return (
     <div className={`movie-card movie-card--${size}`} onClick={() => onClick(movie)}>
-      <div className="movie-card__poster" style={{ background: movie.gradient }}>
-        <div className="movie-card__overlay" />
-        <div className="movie-card__title-overlay">
-          <span className="movie-card__title-text">{movie.title}</span>
-        </div>
+      <div className="movie-card__poster" style={movie.poster ? {} : { background: movie.gradient }}>
+        {movie.poster ? (
+          <img src={movie.poster} alt={movie.title} className="movie-card__img" loading="lazy" />
+        ) : (
+          <>
+            <div className="movie-card__overlay" />
+            <div className="movie-card__title-overlay">
+              <span className="movie-card__title-text">{movie.title}</span>
+            </div>
+            <div className="movie-card__shimmer" />
+            <div className="movie-card__orb" style={{ background: movie.accentColor }} />
+            <div className="movie-card__figure" />
+          </>
+        )}
         {movie.isSeries && <div className="movie-card__badge">SERIES</div>}
         <div className="movie-card__rating">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="#f59e0b">
@@ -25,10 +34,6 @@ export default function MovieCard({ movie, onClick, size = 'md', showProgress = 
           </svg>
           <span>{movie.rating}</span>
         </div>
-        <div className="movie-card__shimmer" />
-        {/* Gradient accent elements */}
-        <div className="movie-card__orb" style={{ background: movie.accentColor }} />
-        <div className="movie-card__figure" />
       </div>
       {showProgress && movie.progress && movie.progress > 0 && (
         <div className="movie-card__progress-bar">

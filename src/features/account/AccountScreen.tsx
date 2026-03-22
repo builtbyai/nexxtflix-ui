@@ -1,130 +1,296 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AccountScreen.css';
+import { fetchRDUser, getEmbyServers, saveEmbyServers, embyCheckServer, embyGetUsers, EmbyServer } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
-const PLAN_FEATURES = ['4K Ultra HD', 'HDR10+', 'Dolby Atmos', '4 Screens', 'Offline Downloads'];
-
-const MENU_ITEMS = [
-  { icon: 'user', label: 'Edit Profile', sub: 'Update your info' },
-  { icon: 'bell', label: 'Notifications', sub: 'Manage alerts', toggle: true },
-  { icon: 'lock', label: 'Privacy & Security', sub: 'Passwords, biometrics' },
-  { icon: 'credit', label: 'Billing & Plans', sub: 'Premium · Monthly' },
-  { icon: 'globe', label: 'Language & Region', sub: 'English (US)' },
-  { icon: 'star', label: 'Rate NexxtFlix', sub: 'Leave a review' },
-  { icon: 'help', label: 'Help & Support', sub: 'FAQs, contact us' },
-];
-
-function MenuIcon({ name }: { name: string }) {
-  switch (name) {
-    case 'user': return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
-    case 'bell': return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
-    case 'lock': return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
-    case 'credit': return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
-    case 'globe': return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
-    case 'star': return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-    case 'help': return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
-    default: return null;
-  }
-}
+const SERVER_COLORS = ['#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#06b6d4', '#ef4444'];
 
 export default function AccountScreen() {
-  const [notifOn, setNotifOn] = useState(true);
-  const [watchTime] = useState('142h 37m');
+  const { user } = useAuth();
+  const [rdUser, setRdUser] = useState<any>(null);
+  const [notifications, setNotifications] = useState(true);
+  const [servers, setServers] = useState<EmbyServer[]>(getEmbyServers(user?.email));
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newServer, setNewServer] = useState({ name: '', url: '', apiKey: '', direct: false });
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'fail'>('idle');
+  const [serverUsers, setServerUsers] = useState<{ Id: string; Name: string }[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [savingServer, setSavingServer] = useState(false);
+
+  useEffect(() => {
+    fetchRDUser().then(data => {
+      if (data?.user) setRdUser(data.user);
+    });
+  }, []);
+
+  const handleTestConnection = async () => {
+    if (!newServer.url || !newServer.apiKey) return;
+    setTestStatus('testing');
+    const tempServer: EmbyServer = {
+      id: `temp-${Date.now()}`,
+      name: newServer.name || 'Test',
+      url: newServer.url.replace(/\/+$/, ''),
+      apiKey: newServer.apiKey,
+      userId: '',
+      color: SERVER_COLORS[servers.length % SERVER_COLORS.length],
+      direct: newServer.direct,
+    };
+    const ok = await embyCheckServer(tempServer);
+    setTestStatus(ok ? 'success' : 'fail');
+    if (ok) {
+      const users = await embyGetUsers(tempServer);
+      setServerUsers(users);
+      if (users.length > 0) setSelectedUserId(users[0].Id);
+    }
+  };
+
+  const handleSaveServer = () => {
+    if (!newServer.name || !newServer.url || !newServer.apiKey) return;
+    setSavingServer(true);
+    const server: EmbyServer = {
+      id: `srv-${Date.now()}`,
+      name: newServer.name,
+      url: newServer.url.replace(/\/+$/, ''),
+      apiKey: newServer.apiKey,
+      userId: selectedUserId,
+      color: SERVER_COLORS[servers.length % SERVER_COLORS.length],
+      direct: newServer.direct,
+    };
+    const updated = [...servers, server];
+    saveEmbyServers(updated);
+    setServers(updated);
+    setNewServer({ name: '', url: '', apiKey: '', direct: false });
+    setShowAddForm(false);
+    setTestStatus('idle');
+    setServerUsers([]);
+    setSelectedUserId('');
+    setSavingServer(false);
+  };
+
+  const handleRemoveServer = (id: string) => {
+    const updated = servers.filter(s => s.id !== id);
+    saveEmbyServers(updated);
+    setServers(updated);
+  };
+
+  const MENU_ITEMS = [
+    { icon: 'settings', label: 'Playback Settings' },
+    { icon: 'bell', label: 'Notifications', toggle: true },
+    { icon: 'download', label: 'Download Quality' },
+    { icon: 'monitor', label: 'Display' },
+    { icon: 'shield', label: 'Privacy' },
+    { icon: 'help', label: 'Help & Support' },
+    { icon: 'info', label: 'About' },
+  ];
 
   return (
     <div className="account-screen">
-      {/* Header */}
-      <div className="account-header">
-        <h1 className="account-page-title">Account</h1>
-
-        {/* Profile Card */}
-        <div className="profile-card">
-          <div className="profile-avatar-wrap">
-            <div className="profile-avatar">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="1.5">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </div>
-            <div className="profile-avatar__ring" />
+      <div className="account-profile">
+        <div className="account-avatar-ring">
+          <div className="account-avatar">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
           </div>
-          <div className="profile-info">
-            <span className="profile-name">Alex Morgan</span>
-            <span className="profile-email">alex.morgan@nexxt.com</span>
-            <div className="profile-plan-badge">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="#f59e0b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              Premium Ultra
-            </div>
-          </div>
-          <button className="profile-edit-btn">Edit</button>
         </div>
+        <h2 className="account-name">{rdUser?.username || 'User'}</h2>
+        <p className="account-email">{rdUser?.email || 'Not connected'}</p>
+        <span className="account-plan-badge">{rdUser ? 'Real-Debrid Premium' : 'Free'}</span>
       </div>
 
-      {/* Stats */}
       <div className="account-stats">
-        <div className="stat-card">
-          <span className="stat-card__num">142h</span>
-          <span className="stat-card__label">Watch Time</span>
+        <div className="account-stat">
+          <span className="account-stat__num">{servers.length}</span>
+          <span className="account-stat__label">Emby Servers</span>
         </div>
-        <div className="stat-card">
-          <span className="stat-card__num">47</span>
-          <span className="stat-card__label">My List</span>
+        <div className="account-stat">
+          <span className="account-stat__num">{rdUser ? 'Active' : '\u2014'}</span>
+          <span className="account-stat__label">RD Status</span>
         </div>
-        <div className="stat-card">
-          <span className="stat-card__num">12</span>
-          <span className="stat-card__label">Downloads</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-card__num">8.6</span>
-          <span className="stat-card__label">Avg Rating</span>
+        <div className="account-stat">
+          <span className="account-stat__num">{rdUser?.expiration?.split('T')[0] || '\u2014'}</span>
+          <span className="account-stat__label">Expires</span>
         </div>
       </div>
 
-      {/* Plan */}
-      <div className="plan-card">
-        <div className="plan-card__top">
-          <div>
-            <div className="plan-card__label">Current Plan</div>
-            <div className="plan-card__name">Premium Ultra</div>
-          </div>
-          <div className="plan-card__price">
-            <span className="plan-price-num">$17</span>
-            <span className="plan-price-per">/mo</span>
-          </div>
+      {/* Manage Servers Section */}
+      <div className="account-servers">
+        <div className="servers-header">
+          <h3 className="account-section-title">Manage Servers ({servers.length})</h3>
+          <button className="add-server-btn" onClick={() => setShowAddForm(!showAddForm)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Server
+          </button>
         </div>
-        <div className="plan-features">
-          {PLAN_FEATURES.map((f, i) => (
-            <div key={i} className="plan-feature">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              <span>{f}</span>
+
+        {/* Server List */}
+        <div className="server-list">
+          {servers.map(s => (
+            <div key={s.id} className="server-item">
+              <div className="server-dot" style={{ background: s.color }} />
+              <div className="server-item-info">
+                <span className="server-item-name">
+                  {s.name}
+                  {s.direct && <span className="server-local-badge">LOCAL</span>}
+                </span>
+                <span className="server-item-url">{s.url}</span>
+              </div>
+              <button className="server-remove-btn" onClick={() => handleRemoveServer(s.id)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
           ))}
         </div>
-        <button className="plan-manage-btn">Manage Plan</button>
+
+        {/* Add Server Form */}
+        {showAddForm && (
+          <div className="add-server-form">
+            <div className="form-field">
+              <label className="form-label">Server Name</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="My Emby Server"
+                value={newServer.name}
+                onChange={e => setNewServer(p => ({ ...p, name: e.target.value }))}
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label">Server URL</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="https://emby.example.com"
+                value={newServer.url}
+                onChange={e => setNewServer(p => ({ ...p, url: e.target.value }))}
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label">API Key</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter API key"
+                value={newServer.apiKey}
+                onChange={e => setNewServer(p => ({ ...p, apiKey: e.target.value }))}
+              />
+            </div>
+
+            {/* Direct/Local Toggle */}
+            <div className="form-field form-field--row">
+              <div className="form-field-label-group">
+                <label className="form-label">Direct / Local Connection</label>
+                <span className="form-hint">Enable for LAN servers — bypasses cloud proxy</span>
+              </div>
+              <button
+                className={`smart-toggle ${newServer.direct ? 'smart-toggle--on' : ''}`}
+                onClick={() => setNewServer(p => ({ ...p, direct: !p.direct }))}
+              >
+                <div className="smart-toggle-thumb" />
+              </button>
+            </div>
+
+            {/* User Picker */}
+            {serverUsers.length > 0 && (
+              <div className="form-field">
+                <label className="form-label">Select User</label>
+                <select
+                  className="form-select"
+                  value={selectedUserId}
+                  onChange={e => setSelectedUserId(e.target.value)}
+                >
+                  {serverUsers.map(u => (
+                    <option key={u.Id} value={u.Id}>{u.Name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Test Status */}
+            {testStatus === 'success' && (
+              <div className="test-result test-result--success">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Connection successful{serverUsers.length > 0 ? ` \u2022 ${serverUsers.length} user(s) found` : ''}
+              </div>
+            )}
+            {testStatus === 'fail' && (
+              <div className="test-result test-result--fail">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Connection failed. Check URL and API key.
+              </div>
+            )}
+
+            <div className="form-actions">
+              <button
+                className="form-btn form-btn--test"
+                onClick={handleTestConnection}
+                disabled={testStatus === 'testing' || !newServer.url || !newServer.apiKey}
+              >
+                {testStatus === 'testing' ? (
+                  <div className="form-spinner" />
+                ) : 'Test Connection'}
+              </button>
+              <button
+                className="form-btn form-btn--save"
+                onClick={handleSaveServer}
+                disabled={!newServer.name || !newServer.url || !newServer.apiKey || savingServer}
+              >
+                Save Server
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Menu */}
+      {rdUser && (
+        <div className="account-plan-card">
+          <div className="plan-card-top">
+            <span className="plan-name">Real-Debrid Premium</span>
+            <span className="plan-price">{rdUser.type || 'Premium'}</span>
+          </div>
+          <div className="plan-features">
+            <span>Unlimited downloads</span>
+            <span>Max speed streaming</span>
+            <span>All hosters supported</span>
+            <span>Torrent caching</span>
+          </div>
+        </div>
+      )}
+
       <div className="account-menu">
         {MENU_ITEMS.map((item, i) => (
-          <div key={i} className="menu-item">
-            <div className="menu-item__icon">
-              <MenuIcon name={item.icon} />
-            </div>
-            <div className="menu-item__text">
-              <span className="menu-item__label">{item.label}</span>
-              <span className="menu-item__sub">{item.sub}</span>
+          <div key={i} className="account-menu-item">
+            <div className="menu-item-left">
+              <div className="menu-item-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
+                  {item.icon === 'settings' && <><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 18v-2m8-8h-2M4 12H2"/></>}
+                  {item.icon === 'bell' && <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></>}
+                  {item.icon === 'download' && <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>}
+                  {item.icon === 'monitor' && <><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></>}
+                  {item.icon === 'shield' && <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>}
+                  {item.icon === 'help' && <><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>}
+                  {item.icon === 'info' && <><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>}
+                </svg>
+              </div>
+              <span className="menu-item-label">{item.label}</span>
             </div>
             {item.toggle ? (
-              <div
-                className={`toggle-switch ${notifOn ? 'toggle-switch--on' : ''}`}
-                onClick={() => setNotifOn(n => !n)}
-              >
-                <div className="toggle-thumb" />
-              </div>
+              <button className={`smart-toggle ${notifications ? 'smart-toggle--on' : ''}`} onClick={() => setNotifications(n => !n)}>
+                <div className="smart-toggle-thumb" />
+              </button>
             ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             )}
@@ -132,19 +298,10 @@ export default function AccountScreen() {
         ))}
       </div>
 
-      {/* Sign Out */}
-      <button className="signout-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-        Sign Out
-      </button>
+      <button className="account-signout">Sign Out</button>
 
       <div className="account-footer">
-        <span>NexxtFlix v3.2.1</span>
-        <span>Terms • Privacy • Help</span>
+        <span>NexxtFlix v2.0 &bull; Emby + Real-Debrid</span>
       </div>
     </div>
   );

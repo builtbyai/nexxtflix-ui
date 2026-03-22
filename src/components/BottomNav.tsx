@@ -6,12 +6,21 @@ import { NavTab } from '../types';
 interface Props {
   active: NavTab;
   onChange: (tab: NavTab) => void;
+  isAdmin?: boolean;
 }
 
-const tabs: { id: NavTab; label: string; icon: string }[] = [
+const baseTabs: { id: NavTab; label: string; icon: string }[] = [
   { id: 'home', label: 'Home', icon: 'home' },
   { id: 'search', label: 'Search', icon: 'search' },
   { id: 'downloads', label: 'Downloads', icon: 'download' },
+  { id: 'account', label: 'Account', icon: 'user' },
+];
+
+const adminTabs: { id: NavTab; label: string; icon: string }[] = [
+  { id: 'home', label: 'Home', icon: 'home' },
+  { id: 'search', label: 'Search', icon: 'search' },
+  { id: 'downloads', label: 'Downloads', icon: 'download' },
+  { id: 'admin', label: 'Admin', icon: 'shield' },
   { id: 'account', label: 'Account', icon: 'user' },
 ];
 
@@ -47,11 +56,18 @@ function getIcon(name: string, active: boolean) {
           <circle cx="12" cy="7" r="4"/>
         </svg>
       );
+    case 'shield':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? color : 'none'} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      );
     default: return null;
   }
 }
 
-export default function BottomNav({ active, onChange }: Props) {
+export default function BottomNav({ active, onChange, isAdmin }: Props) {
+  const tabs = isAdmin ? adminTabs : baseTabs;
   return (
     <nav className="bottom-nav">
       {tabs.map(tab => (
