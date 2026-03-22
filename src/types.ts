@@ -1,5 +1,4 @@
-
-export type NavTab = 'home' | 'search' | 'downloads' | 'account';
+export type NavTab = 'home' | 'search' | 'downloads' | 'account' | 'email' | 'notes' | 'business' | 'chat';
 
 export interface Movie {
   id: number;

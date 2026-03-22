@@ -1,18 +1,80 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #0d0d1a;
+  --bg-secondary: #151528;
+  --bg-card: #1a1a32;
+  --bg-input: #1e1e38;
+  --accent-purple: #7c3aed;
+  --accent-violet: #8b5cf6;
+  --accent-pink: #ec4899;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: rgba(255, 255, 255, 0.08);
+  --glow-purple: rgba(124, 58, 237, 0.3);
+  --nav-height: 64px;
+  --topbar-height: 56px;
+}
+
+.light {
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-input: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: rgba(0, 0, 0, 0.1);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
 
 .app-shell {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--bg-primary);
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #0d0d1a;
-  max-width: 430px;
-  margin: 0 auto;
   position: relative;
   overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .screen-container {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 70px;
+  padding-bottom: var(--nav-height);
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-purple) transparent;
+}
+
+.screen-container::-webkit-scrollbar {
+  width: 3px;
+}
+
+.screen-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.screen-container::-webkit-scrollbar-thumb {
+  background: var(--accent-purple);
+  border-radius: 2px;
 }

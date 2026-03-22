@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import './App.css';
 import HomeScreen from './features/home/HomeScreen';
@@ -7,16 +6,26 @@ import DetailScreen from './features/detail/DetailScreen';
 import SearchScreen from './features/search/SearchScreen';
 import DownloadsScreen from './features/downloads/DownloadsScreen';
 import AccountScreen from './features/account/AccountScreen';
+import DashboardScreen from './features/dashboard/DashboardScreen';
+import EmailPageScreen from './features/email-page/EmailPageScreen';
+import EmailTab from './features/email/EmailTab';
+import NotesTab from './features/notes/NotesTab';
+import BusinessTab from './features/business/BusinessTab';
+import ChatTab from './features/chat/ChatTab';
+import AIAssistantPanel from './features/ai/AIAssistantPanel';
+import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
 import { Movie, NavTab } from './types';
 
-export type Screen = 'home' | 'player' | 'detail' | 'search' | 'downloads' | 'account';
+export type Screen = 'home' | 'player' | 'detail' | 'search' | 'downloads' | 'account' | 'dashboard' | 'email-page' | 'email' | 'notes' | 'business' | 'chat';
 
 function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [activeNav, setActiveNav] = useState<NavTab>('home');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [showAI, setShowAI] = useState(false);
 
   const navigate = (s: Screen, movie?: Movie) => {
     if (movie) setSelectedMovie(movie);
@@ -33,11 +42,19 @@ function App() {
     if (tab === 'search') setScreen('search');
     if (tab === 'downloads') setScreen('downloads');
     if (tab === 'account') setScreen('account');
+    if (tab === 'dashboard') setScreen('dashboard');
+    if (tab === 'email-page') setScreen('email-page');
   };
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${darkMode ? 'dark' : 'light'}`}>
+      <TopBar
+        activeTab={activeNav}
+        darkMode={darkMode}
+        onToggleDark={() => setDarkMode(d => !d)}
+      />
       <div className="screen-container">
+        {/* Streaming Screens */}
         {screen === 'home' && (
           <HomeScreen
             onMovieClick={(m) => navigate('detail', m)}
@@ -72,8 +89,15 @@ function App() {
         {screen === 'account' && (
           <AccountScreen />
         )}
+
+        {/* Dashboard Screens */}
+        {screen === 'email' && <EmailTab onOpenAI={() => setShowAI(true)} />}
+        {screen === 'notes' && <NotesTab onOpenAI={() => setShowAI(true)} />}
+        {screen === 'business' && <BusinessTab onOpenAI={() => setShowAI(true)} />}
+        {screen === 'chat' && <ChatTab />}
       </div>
       <BottomNav active={activeNav} onChange={handleNavChange} />
+      {showAI && <AIAssistantPanel onClose={() => setShowAI(false)} />}
     </div>
   );
 }
