@@ -9,10 +9,10 @@ interface Props {
 
 const tabs: { id: NavTab; label: string; icon: string }[] = [
   { id: 'home', label: 'Home', icon: 'home' },
-  { id: 'search', label: 'Search', icon: 'search' },
-  { id: 'downloads', label: 'Downloads', icon: 'download' },
-  { id: 'account', label: 'Account', icon: 'user' },
-  { id: 'email-page', label: 'Email', icon: 'email' },
+  { id: 'email', label: 'Email', icon: 'email' },
+  { id: 'notes', label: 'Notes', icon: 'notes' },
+  { id: 'business', label: 'Business', icon: 'business' },
+  { id: 'chat', label: 'Chat', icon: 'chat' },
 ];
 
 function getIcon(name: string, active: boolean) {
@@ -52,6 +52,26 @@ function getIcon(name: string, active: boolean) {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
           <polyline points="22 6 12 13 2 6"/>
+        </svg>
+      );
+    case 'notes':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
+          <path d="M16 2v4M8 2v4M4 10h16"/>
+        </svg>
+      );
+    case 'business':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      );
+    case 'chat':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
       );
     default: return null;

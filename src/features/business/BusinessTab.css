@@ -1,0 +1,188 @@
+.business-tab {
+  padding: 20px 16px;
+}
+
+.business-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.business-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.business-ai-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--accent-purple);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.business-ai-btn:hover {
+  background: var(--accent-violet);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--glow-purple);
+}
+
+.business-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.business-filters::-webkit-scrollbar {
+  height: 2px;
+}
+
+.business-filters::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.business-filters::-webkit-scrollbar-thumb {
+  background: var(--accent-purple);
+  border-radius: 1px;
+}
+
+.business-filter-btn {
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.business-filter-btn:hover {
+  border-color: var(--accent-purple);
+  color: var(--text-primary);
+}
+
+.business-filter-btn--active {
+  background: var(--accent-purple);
+  color: white;
+  border-color: var(--accent-purple);
+}
+
+.business-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.business-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.business-empty svg {
+  opacity: 0.3;
+}
+
+.business-empty p {
+  font-size: 14px;
+}
+
+.business-task-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.business-task-card:hover {
+  border-color: var(--accent-purple);
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.business-task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.business-task-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.business-priority-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.priority-high {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.priority-medium {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.priority-low {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.business-task-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.business-task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.business-task-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.business-task-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
