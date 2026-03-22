@@ -12,7 +12,7 @@ const tabs: { id: NavTab; label: string; icon: string }[] = [
   { id: 'search', label: 'Search', icon: 'search' },
   { id: 'downloads', label: 'Downloads', icon: 'download' },
   { id: 'account', label: 'Account', icon: 'user' },
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { id: 'email-page', label: 'Email', icon: 'email' },
 ];
 
 function getIcon(name: string, active: boolean) {
@@ -47,13 +47,11 @@ function getIcon(name: string, active: boolean) {
           <circle cx="12" cy="7" r="4"/>
         </svg>
       );
-    case 'dashboard':
+    case 'email':
       return (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? color : 'none'} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7"/>
-          <rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22 6 12 13 2 6"/>
         </svg>
       );
     default: return null;

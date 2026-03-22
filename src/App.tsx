@@ -7,10 +7,11 @@ import SearchScreen from './features/search/SearchScreen';
 import DownloadsScreen from './features/downloads/DownloadsScreen';
 import AccountScreen from './features/account/AccountScreen';
 import DashboardScreen from './features/dashboard/DashboardScreen';
+import EmailPageScreen from './features/email-page/EmailPageScreen';
 import BottomNav from './components/BottomNav';
 import { Movie, NavTab } from './types';
 
-export type Screen = 'home' | 'player' | 'detail' | 'search' | 'downloads' | 'account' | 'dashboard';
+export type Screen = 'home' | 'player' | 'detail' | 'search' | 'downloads' | 'account' | 'dashboard' | 'email-page';
 
 function App() {
   const [screen, setScreen] = useState<Screen>('home');
@@ -34,6 +35,7 @@ function App() {
     if (tab === 'downloads') setScreen('downloads');
     if (tab === 'account') setScreen('account');
     if (tab === 'dashboard') setScreen('dashboard');
+    if (tab === 'email-page') setScreen('email-page');
   };
 
   return (
@@ -75,6 +77,9 @@ function App() {
         )}
         {screen === 'dashboard' && (
           <DashboardScreen onBack={() => navigate('home')} />
+        )}
+        {screen === 'email-page' && (
+          <EmailPageScreen onBack={() => navigate('home')} />
         )}
       </div>
       <BottomNav active={activeNav} onChange={handleNavChange} />
